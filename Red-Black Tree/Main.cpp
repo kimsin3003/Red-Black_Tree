@@ -1,6 +1,7 @@
 #include "RedBlackTree.h"
 #include <random>
 #include <time.h>
+#include <iostream>
 int main()
 {
 	RedBlackTree rb;
@@ -9,6 +10,9 @@ int main()
 	{
 		rb.Insert(i);
 	}
+
+	Node* result = rb.SearchData(10);
+	std::cout << (result->data) << std::endl;
 
 	getchar();
 }

@@ -47,107 +47,35 @@ void RedBlackTree::Insert(int data) {
 	}
 }
 
-
-//중복 값이 없다고 보고 짰습니다.
-void RedBlackTree::Delete(int data) {
-
-	Node* nodeToDelete = nullptr;
-
-	if (!(nodeToDelete = _SearchNode(root, data))) {
-		std::cout << "no matching data" << std::endl;
+void RedBlackTree::_Insert(Node* curNode, Node* newNode)
+{
+	if (curNode == nullptr || newNode == nullptr)
 		return;
-	}
-	_Delete(root, data);
-	FixDeleteViolation(nodeToDelete);
 
-	//결과 체크
-	if (CheckRB(this)) {
-		std::cout << "Delete complete" << std::endl;
-	}
-	else
-	{
-		std::cout << "Delete Fail fail" << std::endl;
-	}
-}
+	if (curNode->data > newNode->data) {
 
-Node* RedBlackTree::SearchData(int data)
-{
-	return _SearchNode(root, data);
-}
-
-Node* RedBlackTree::_SearchNode(Node* curNode, int data)
-{
-	if (!curNode)
-		return nullptr;
-	
-	if (curNode->data == data)
-		return curNode;
-
-	else if (curNode->data < data)
-	{
-		if (curNode->right == NIL)
-			return nullptr;
-		else
-			return _SearchNode(curNode->right, data);
-	}
-	else
-	{
 		if (curNode->left == NIL)
-			return nullptr;
-		else
-			return _SearchNode(curNode->left, data);
-	}
-}
-
-void RedBlackTree::_Delete(Node* curNode, int data)
-{
-	if (curNode == nullptr)
-		return;
-
-	Node * successor;
-
-	if (curNode->left == NIL) // left child가 없는 경우
-		Transplant(this, curNode, curNode->right); // node->right가 NULL인 경우 포함
-	else if (curNode->right == NIL) // left child는 있고 right child가 없는 경우
-		Transplant(this, curNode, curNode->left);
-	else { // child가 2개인 경우
-		successor = TreeMinimum(curNode->right); // right subtree에서 최소값 노드
-		if (curNode->right != successor) {
-			Transplant(this, successor, successor->right);
-			successor->right = curNode->right; // successor의 child 지정
-			successor->right->parent = successor; // right child의 부모 지정
+		{
+			curNode->left = newNode;
+			newNode->left = NIL;
+			newNode->right = NIL;
+			newNode->parent = curNode;
+			return;
 		}
-		Transplant(this, curNode, successor); // 여기에서 node 자리에 successor 이식
-		successor->left = curNode->left; // successor의 left child 지정
-		successor->left->parent = successor; // successor의 parent 지정
+		_Insert(curNode->left, newNode);
 	}
+	else {
 
-}
-
-void RedBlackTree::Transplant(RedBlackTree * tree, Node* delNode, Node* plantNode) // 이식될 노드
-{
-	if (delNode->parent == NIL) { // parent가 NULL인 경우
-		tree->root = plantNode;
-		tree->root->parent = NIL;
+		if (curNode->right == NIL)
+		{
+			curNode->right = newNode;
+			newNode->left = NIL;
+			newNode->right = NIL;
+			newNode->parent = curNode;
+			return;
+		}
+		_Insert(curNode->right, newNode);
 	}
-	else if (delNode->parent->left == delNode)
-		delNode->parent->left = plantNode;
-	else if (delNode->parent->right == delNode)
-		delNode->parent->right = plantNode;
-	if (plantNode)
-		plantNode->parent = delNode->parent;
-}
-
-Node* RedBlackTree::TreeMinimum(Node* node) {
-	if (node->left == NIL)
-		return node;
-	else
-		return TreeMinimum(node->left);
-}
-
-
-void RedBlackTree::FixDeleteViolation(Node * node)
-{
 }
 
 void RedBlackTree::FixInsertViolation(Node* node)
@@ -156,6 +84,7 @@ void RedBlackTree::FixInsertViolation(Node* node)
 	{
 		if (node->parent == NIL) { // 자신이 root일때.
 			node->color = BLACK;
+			root = node;
 			return;
 		}
 	}
@@ -164,10 +93,10 @@ void RedBlackTree::FixInsertViolation(Node* node)
 		Node* grandParent = node->parent->parent;
 		if (grandParent->left == node->parent) // 부모가 GP의 leftchild인 경우
 		{
-			
+
 			if (grandParent->right->color == BLACK) // uncle이 black이면 
 			{
-				
+
 				if (node->parent->right == node)// 현재 노드가 rightchild이면
 				{
 					node = node->parent;
@@ -211,37 +140,198 @@ void RedBlackTree::FixInsertViolation(Node* node)
 	}
 }
 
-void RedBlackTree::_Insert(Node* curNode, Node* newNode)
-{
-	if (curNode == nullptr || newNode == nullptr)
+
+void RedBlackTree::Delete(int data) {
+
+	Node* nodeToDelete = nullptr;
+	Node* nodeToFix = nullptr;
+	if (!(nodeToDelete = _SearchNode(root, data))) {
+		std::cout << "no matching data" << std::endl;
 		return;
-
-	if (curNode->data > newNode->data) {
-
-		if (curNode->left == NIL)
-		{
-			curNode->left = newNode;
-			newNode->left = NIL;
-			newNode->right = NIL;
-			newNode->parent = curNode;
-			return;
-		}
-		_Insert(curNode->left, newNode);
 	}
-	else {
 
-		if (curNode->right == NIL)
-		{
-			curNode->right = newNode;
-			newNode->left = NIL;
-			newNode->right = NIL;
-			newNode->parent = curNode;
-			return;
-		}
-		_Insert(curNode->right, newNode);
+	COLOR erasedColor;
+	_Delete(nodeToDelete, &nodeToFix, &erasedColor);
+	if (nodeToFix)
+	{
+		if (erasedColor == BLACK)
+			FixDeleteViolation(nodeToFix);
+	}
+
+	//결과 체크
+	if (CheckRB(this)) {
+		std::cout << "Delete complete" << std::endl;
+	}
+	else
+	{
+		std::cout << "Delete Fail" << std::endl;
 	}
 }
 
+void RedBlackTree::_Delete(Node* delNode, Node** nodeToFix, COLOR* erasedColor)
+{
+	if (delNode == nullptr)
+		return;
+
+	*erasedColor = delNode->color;
+	if (delNode->left == NIL) { // left child가 없는 경우
+		*nodeToFix = delNode->right;
+		Transplant(this, delNode, delNode->right); // node->right가 NULL인 경우 포함
+	}
+	else if (delNode->right == NIL) { // left child는 있고 right child가 없는 경우
+		*nodeToFix = delNode->left;
+		Transplant(this, delNode, delNode->left);
+	}
+	else { // child가 2개인 경우
+		Node* sucessor = TreeMinimum(delNode->right);	// right subtree에서 최소값 노드
+		*erasedColor = sucessor->color;
+		*nodeToFix = sucessor->right;
+		if (sucessor->parent == delNode)
+			(*nodeToFix)->parent = sucessor;
+		else
+		{
+			Transplant(this, sucessor, sucessor->right);
+			sucessor->right = delNode->right; // successor의 child 지정
+			sucessor->right->parent = sucessor; // right child의 부모 지정
+		}
+		Transplant(this, delNode, sucessor); // 여기에서 node 자리에 successor 이식
+		sucessor->left = delNode->left; // successor의 left child 지정
+		sucessor->left->parent = sucessor; // successor의 parent 지정
+		sucessor->color = delNode->color;
+	}
+}
+
+void RedBlackTree::FixDeleteViolation(Node* nodeToFix)
+{
+	if (nodeToFix->parent == NIL || nodeToFix->color == RED)
+	{
+		nodeToFix->color = BLACK;
+	}
+	else
+	{
+		Node* sibling;
+		if (nodeToFix == nodeToFix->parent->left)
+		{
+			sibling = nodeToFix->parent->right;
+			if (sibling->color == RED)//sibling이 red이면 black인 상황으로 바꾼다.
+			{
+				sibling->color = BLACK;
+				nodeToFix->parent->color = RED;
+				LeftRotate(nodeToFix->parent);
+				sibling = nodeToFix->parent->right;
+			}
+
+			//여기부터는 sibling이 블랙인 경우만 존재.
+			//nodeToFix와 sibling의 bh차가 1이므로, sibling이 NIL일 수 는 없다.
+			if(sibling->left->color == BLACK && sibling->right->color == BLACK)
+			{
+				sibling->color = RED;
+				FixDeleteViolation(nodeToFix->parent);
+			}
+			else
+			{
+				if (sibling->right->color == BLACK)
+				{
+					sibling->left->color = BLACK;
+					sibling->color = RED;
+					RightRotate(sibling);
+					sibling = nodeToFix->parent->right;
+				}
+				sibling->color = nodeToFix->parent->color;
+				nodeToFix->parent->color = BLACK;
+				sibling->right->color = BLACK;
+				LeftRotate(nodeToFix->parent);
+
+			}
+		}
+		else
+		{
+			sibling = nodeToFix->parent->left;
+			if (sibling->color == RED)//sibling이 red이면 black인 상황으로 바꾼다.
+			{
+				sibling->color = BLACK;
+				nodeToFix->parent->color = RED;
+				RightRotate(nodeToFix->parent);
+				sibling = nodeToFix->parent->left;
+			}
+
+			//여기부터는 sibling이 블랙인 경우만 존재.
+			//nodeToFix와 sibling의 bh차가 1이므로, sibling이 NIL일 수 는 없다.
+			if (sibling->left->color == BLACK && sibling->right->color == BLACK)
+			{
+				sibling->color = RED;
+				FixDeleteViolation(nodeToFix->parent);
+			}
+			else
+			{
+				if (sibling->left->color == BLACK)
+				{
+					sibling->right->color = BLACK;
+					sibling->color = RED;
+					LeftRotate(sibling);
+					sibling = nodeToFix->parent->left;
+				}
+				sibling->color = nodeToFix->parent->color;
+				nodeToFix->parent->color = BLACK;
+				sibling->left->color = BLACK;
+				RightRotate(nodeToFix->parent);
+
+			}
+		}
+	}
+}
+
+
+Node* RedBlackTree::SearchData(int data)
+{
+	return _SearchNode(root, data);
+}
+
+Node* RedBlackTree::_SearchNode(Node* curNode, int data)
+{
+	if (!curNode)
+		return nullptr;
+	
+	if (curNode->data == data)
+		return curNode;
+
+	else if (curNode->data < data)
+	{
+		if (curNode->right == NIL)
+			return nullptr;
+		else
+			return _SearchNode(curNode->right, data);
+	}
+	else
+	{
+		if (curNode->left == NIL)
+			return nullptr;
+		else
+			return _SearchNode(curNode->left, data);
+	}
+}
+
+
+void RedBlackTree::Transplant(RedBlackTree * tree, Node* delNode, Node* plantNode) // 이식될 노드
+{
+	if (delNode->parent == NIL)  // parent가 NULL인 경우
+		tree->root = plantNode;
+	
+	else if (delNode->parent->left == delNode)
+		delNode->parent->left = plantNode;
+
+	else if (delNode->parent->right == delNode)
+		delNode->parent->right = plantNode;
+	
+	plantNode->parent = delNode->parent;
+}
+
+Node* RedBlackTree::TreeMinimum(Node* node) {
+	if (node->left == NIL)
+		return node;
+	else
+		return TreeMinimum(node->left);
+}
 
 void RedBlackTree::LeftRotate(Node* node)
 {
@@ -264,6 +354,7 @@ void RedBlackTree::LeftRotate(Node* node)
 void RedBlackTree::RightRotate(Node* node)
 {
 	Node* y = node->left;
+
 	node->left = y->right;
 	if (y->right != NIL)
 		y->right->parent = node;
@@ -282,6 +373,9 @@ void RedBlackTree::RightRotate(Node* node)
 bool RedBlackTree::CheckRB(RedBlackTree* rb) {
 
 	int count = _CheckRB(rb->root);
+
+	if (root->color != BLACK || root->parent != NIL)
+		return false;
 	if (count != -1)
 		return true;
 	else

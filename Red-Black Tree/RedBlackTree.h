@@ -28,14 +28,14 @@ private:
 	void RightRotate(Node* node);
 	void LeftRotate(Node* node);
 
-	void _Delete(Node* curNode, int data);
-	void Transplant(RedBlackTree * tree, Node* delNode, Node* plantNode);
-	Node* TreeMinimum(Node* node);
-	void FixDeleteViolation(Node* node);
-
 	void _Insert(Node* curNode, Node* newNode);
 	void FixInsertViolation(Node* node);
 
+	void _Delete(Node* delNode, Node** nodeToFix, COLOR* erasedColor);
+	void FixDeleteViolation(Node* nodeToFix);
+
+	void Transplant(RedBlackTree * tree, Node* delNode, Node* plantNode);
+	Node* TreeMinimum(Node* node);
 
 	Node* _SearchNode(Node* curNode, int data);
 
